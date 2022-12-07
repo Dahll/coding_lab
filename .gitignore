@@ -129,5 +129,3 @@ dmypy.json
 .pyre/
 
 data/
-notebooks/
-py2cpp/

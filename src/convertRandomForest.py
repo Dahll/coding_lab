@@ -3,6 +3,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import DecisionTreeRegressor
 from sklearn import tree
 from sklearn.tree import _tree
+from datetime import datetime
 import numpy as np
 import os
 import configparser
@@ -162,7 +163,7 @@ def randomForestPredict2code(model, features_names, file_name):
     
     randomForestMean2code(names, features_names, file_name)
     
-    addMain2cpp(file_name)
+    #addMain2cpp(file_name)
 
 
 def convertRandomForest(model, feature_names, file_name):
@@ -171,4 +172,41 @@ def convertRandomForest(model, feature_names, file_name):
 
     randomForestPredict2code(model, feature_names, file_name + ".cpp")
 
-    test_cpp_compilation(file_name)
+    #test_cpp_compilation(file_name)
+
+
+def mergeCppFiles(path_main, path_eval, path_output):
+    with open(path_main, "r") as f:
+        string_main = f.read()
+    
+    with open(path_eval, "r") as f:
+        string_eval = f.read()
+    
+    with open(path_output, "w") as f:
+        f.write(string_eval)
+        f.write(string_main)
+
+
+def compileCppFiles(input_name, exec_name):
+    """
+  Checks if the generated file is compilable using g++
+  """
+
+    if os.system("g++ " + input_name + " -o " + exec_name + " &> /dev/null") == 0:
+        return True
+    else:
+        return False
+
+
+def generate_agent(model, feature_names, path_main, rep_eval="../data/eval/", rep_agent_cpp="../data/agent/", rep_agent_bin="../data/binary/"):
+    
+    now = datetime.now()
+    dt_string = now.strftime("%Y_%m_%d_%H_%M_%S")
+    
+    name = path_main.split("/")[-1].split(".")[0] + "_" + dt_string
+    
+    convertRandomForest(model, feature_names, rep_eval + "eval_" + name)
+    mergeCppFiles(path_main, rep_eval + "eval_" + name + ".cpp", rep_agent_cpp + "agent_" + name + ".cpp")
+    compileCppFiles(rep_agent_cpp + "agent_" + name + ".cpp", rep_agent_bin + "bin_" + name)
+
+
